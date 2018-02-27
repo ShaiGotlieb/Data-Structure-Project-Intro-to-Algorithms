@@ -1,0 +1,176 @@
+//Author: Shai Gotlieb
+//Date: Februaury, 24th , 20018
+//Maman 16 - Data Structure & Intro. to Algorithms 
+import java.util.Random;
+import java.util.Scanner;
+
+class OnlineMedian {
+	
+	// Main method - please insert the size of the array and the checking points n1 < n2 < n3
+	public static void main(String[] args) {
+		Scanner scan = new Scanner(System.in);
+		System.out.println("Hello, Please enter the array size you want: 200 / 400 / 800");
+		int size = scan.nextInt();
+		System.out.println("Please enter 3 checkpoints for median return: (checkpoints must be lower than the size and n1 < n2 < n3)");
+		System.out.println("n1 = ");
+		int n1 = scan.nextInt();
+		System.out.println("n2 = ");
+		int n2 = scan.nextInt();
+		System.out.println("n3 = ");
+		int n3 = scan.nextInt();
+	
+		int[] Arr = new int[size];
+		Random r = new Random();
+		for(int i = 0; i < size; i++){
+			Arr[i] = r.nextInt(1203);
+		}
+		System.out.println("The medians are: ");
+		printStream(Arr, n1-1, n2-1, n3-1, size);
+		
+	}
+	
+	public static void printStream(int[] Arr,int n1,int n2,int n3,int n){
+		OnlineMedian streamMedian = new OnlineMedian();
+		for (int i = 0; i < n; i++) {
+			streamMedian.insert(Arr[i]);
+			if (i == n1 || i == n2 || i == n3 || i == Arr.length - 1) {
+				streamMedian.printMedian();//printing checking points and median of full array 'Arr'
+			}
+		}
+	}
+
+	// lower and higher queue
+	private Heap lower;
+	private Heap higher;
+
+	// constructor
+	public OnlineMedian() {
+		lower = new Heap(true); // max heap
+		higher = new Heap(false); // min heap
+	}
+
+	// printing the current median
+	public void printMedian() {
+		if (lower.size() == higher.size()) // if both heaps equals - print the median from lower heap (max heap)
+		{
+			System.out.println(lower.peek());
+		} else {
+			System.out.println(higher.peek());
+		}
+	}
+
+	// add a number to queue
+	public void insert(int x) {
+		if (lower.size() == 0 || x < lower.peek()) {
+			lower.add(x);
+		} else {
+			higher.add(x);
+		}
+		balance();
+	}
+
+	// balance the two queues
+	public void balance() {
+		Heap smaller = lower.size() < higher.size() ? lower : higher;
+		Heap bigger = lower.size() > higher.size() ? lower : higher;
+
+		if ((bigger.size() - smaller.size()) >= 2) {
+			smaller.add(bigger.remove());
+		}
+
+	}
+}
+
+// Represents a Heap
+class Heap {
+	private int[] backingArray;
+	private int size;
+	private boolean maxHeap; // true if max heap, else false
+
+	// creates a heap which can hold up to 9 elements
+	// First position in array is kept as empty
+	public Heap(boolean maxHeap) {
+		this.maxHeap = maxHeap;
+		backingArray = new int[10];
+		size = 0;
+	}
+
+	// add an item to heap
+	public void add(int item) {
+		// if full, expand the array
+		if (size == backingArray.length - 1) {
+			int[] expanded = new int[backingArray.length * 2];
+			for (int i = 0; i < backingArray.length; i++) {
+				expanded[i] = backingArray[i];
+			}
+			backingArray = expanded;
+		}
+
+		backingArray[++size] = item; // add to end of heap
+		shiftUp(size); // shift up
+	}
+
+	// shift up an element to correct position
+	private void shiftUp(int i) {
+		int parent = i / 2;
+		while (parent > 0 && compare(parent, i) < 0) {
+			swap(parent, i);
+			i = parent;
+			parent = parent / 2;
+		}
+	}
+
+	// swap two elements
+	private void swap(int i, int j) {
+		int temp = backingArray[i];
+		backingArray[i] = backingArray[j];
+		backingArray[j] = temp;
+	}
+
+	// get the root element
+	public int peek() {
+		return backingArray[1];
+	}
+
+	public int size() {
+		return size;
+	}
+
+	// remove the root of heap
+	public int remove() {
+		// remove first
+		int removed = backingArray[1];
+		// copy last element to root
+		backingArray[1] = backingArray[size];
+		backingArray[size] = 0;
+		size--;
+		reheap(1); // re-heap
+		return removed;
+	}
+
+	// reheap a node by moving element to correct position down the heap
+	private void reheap(int i) {
+		int left = 2 * i;
+		int right = 2 * i + 1;
+		int largest = i;
+
+		if (left <= size && compare(left, largest) > 0) {
+			largest = left;
+		}
+
+		if (right <= size && compare(right, largest) > 0) {
+			largest = right;
+		}
+
+		if (largest != i) {
+			swap(i, largest);
+			reheap(largest);
+		}
+
+	}
+
+	// compare elements at index a and b according to max heap property
+	public int compare(int a, int b) {
+		return maxHeap ? backingArray[a] - backingArray[b] : backingArray[b] - backingArray[a];
+	}
+}
